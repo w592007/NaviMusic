@@ -10,14 +10,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Install git and checkout
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y git
+          git clone https://github.com/w592007/NaviMusic.git .
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+        run: |
+          sudo apt-get install -y openjdk-17-jdk
+          echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
+          echo "/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_PATH
 
       - name: Setup Android SDK
         run: |
@@ -46,9 +49,9 @@ jobs:
 
       - name: List APK output
         if: always()
-        run: find app/build -name "*.apk" 2>/dev/null || echo "No APK found"
+        run: ls -la app/build/outputs/apk/debug/ || echo "No APK directory found"
 
-      - name: Upload APK artifact
+      - name: Upload APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
