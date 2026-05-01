@@ -11,10 +11,8 @@ jobs:
 
     steps:
       - name: Checkout (git clone)
-        run: git clone --depth 1 https://github.com/w592007/NaviMusic.git .
-
-      - name: Fix gradlew line endings
         run: |
+          git clone --depth 1 https://github.com/w592007/NaviMusic.git .
           sed -i 's/\r$//' gradlew
           chmod +x gradlew
 
@@ -22,11 +20,19 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y openjdk-17-jdk
-          echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
-          echo "/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_PATH
+
+      - name: Setup Java environment
+        run: |
+          export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+          export PATH=$JAVA_HOME/bin:$PATH
+          echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
+          echo "PATH=$PATH" >> $GITHUB_ENV
+          java -version
 
       - name: Setup Android SDK
         run: |
+          export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+          export PATH=$JAVA_HOME/bin:$PATH
           ANDROID_HOME=$HOME/android-sdk
           mkdir -p $ANDROID_HOME/cmdline-tools
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdline.zip
@@ -35,23 +41,24 @@ jobs:
           chmod +x $ANDROID_HOME/cmdline-tools/latest/bin/*
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
-
-      - name: Accept SDK Licenses
-        run: yes | sdkmanager --licenses > /dev/null 2>&1 || true
-
-      - name: Install SDK packages
-        run: sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin:$JAVA_HOME/bin" >> $GITHUB_PATH
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
       - name: Build Debug APK
-        run: bash gradlew assembleDebug --no-daemon
+        run: |
+          export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+          java -version
+          which java
+          which sdkmanager
+          bash gradlew assembleDebug --no-daemon
 
       - name: Upload APK via curl
         if: success()
         run: |
           APK="app/build/outputs/apk/debug/app-debug.apk"
           ls -la "$APK" || { echo "APK not found!"; exit 1; }
-          echo "APK built successfully: $APK"
-          # 上传到 tmpfiles.org 作为临时下载链接
+          echo "APK built successfully!"
           curl -F "file=@$APK" https://tmpfiles.org/api/v1/upload
