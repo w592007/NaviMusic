@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/libraryFragment">
+
+    <fragment
+        android:id="@+id/libraryFragment"
+        android:name="com.navimusic.ui.LibraryFragment"
+        android:label="音乐库">
+        <action
+            android:id="@+id/action_library_to_albums"
+            app:destination="@id/albumListFragment" />
+        <action
+            android:id="@+id/action_library_to_songs"
+            app:destination="@id/songListFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/albumListFragment"
+        android:name="com.navimusic.ui.AlbumListFragment"
+        android:label="专辑列表">
+        <argument
+            android:name="artistId"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="artistName"
+            app:argType="string"
+            android:defaultValue="" />
+        <action
+            android:id="@+id/action_albumList_to_songs"
+            app:destination="@id/songListFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/songListFragment"
+        android:name="com.navimusic.ui.SongListFragment"
+        android:label="歌曲列表">
+        <argument
+            android:name="albumId"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="playlistId"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="title"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/playerFragment"
+        android:name="com.navimusic.ui.PlayerFragment"
+        android:label="播放器" />
+
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.navimusic.ui.SearchFragment"
+        android:label="搜索">
+        <action
+            android:id="@+id/action_search_to_songs"
+            app:destination="@id/songListFragment" />
+    </fragment>
+
+</navigation>

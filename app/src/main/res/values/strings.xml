@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NaviMusic</string>
+    <string name="settings">设置</string>
+    <string name="tab_library">音乐库</string>
+    <string name="tab_player">播放器</string>
+    <string name="tab_search">搜索</string>
+    <string name="artists">歌手</string>
+    <string name="albums">专辑</string>
+    <string name="playlists">歌单</string>
+    <string name="songs">歌曲</string>
+    <string name="search_hint">搜索歌曲、专辑、歌手…</string>
+    <string name="play">播放</string>
+    <string name="pause">暂停</string>
+    <string name="next">下一曲</string>
+    <string name="previous">上一曲</string>
+    <string name="no_lyrics">暂无歌词</string>
+    <string name="lan_url">内网地址</string>
+    <string name="wan_url">外网地址</string>
+    <string name="username">用户名</string>
+    <string name="password">密码</string>
+    <string name="save">保存</string>
+    <string name="test_connection">测试连接</string>
+    <string name="connection_ok">连接成功</string>
+    <string name="connection_fail">连接失败，请检查地址和账号</string>
+    <string name="lan_url_hint">例：http://192.168.1.100:4533</string>
+    <string name="wan_url_hint">例：https://music.example.com</string>
+    <string name="not_configured">请先在设置中配置服务器</string>
+    <string name="unknown_artist">未知歌手</string>
+    <string name="unknown_album">未知专辑</string>
+    <string name="shuffle_play">随机播放</string>
+    <string name="queue">播放队列</string>
+    <string name="current_network">当前网络：%1$s</string>
+    <string name="network_lan">内网</string>
+    <string name="network_wan">外网</string>
+</resources>
