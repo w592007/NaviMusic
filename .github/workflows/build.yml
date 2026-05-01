@@ -8,8 +8,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout
@@ -33,11 +31,6 @@ jobs:
           echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
         shell: bash
-
-      - name: Verify SDK tools installed
-        run: |
-          ls $ANDROID_HOME/platform-tools
-          ls $ANDROID_HOME/cmdline-tools/latest/bin
 
       - name: Accept Android SDK Licenses
         run: yes | sdkmanager --licenses > /dev/null 2>&1 || true
