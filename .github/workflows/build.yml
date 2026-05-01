@@ -7,18 +7,16 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
-      - name: Install git and checkout
+      - name: Clone repository
+        run: git clone --depth 1 https://github.com/w592007/NaviMusic.git .
+
+      - name: Install JDK 17
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y git
-          git clone https://github.com/w592007/NaviMusic.git .
-
-      - name: Set up JDK 17
-        run: |
-          sudo apt-get install -y openjdk-17-jdk
+          sudo apt-get install -y openjdk-17-jdk wget unzip
           echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
           echo "/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_PATH
 
@@ -26,7 +24,7 @@ jobs:
         run: |
           ANDROID_HOME=$HOME/android-sdk
           mkdir -p $ANDROID_HOME/cmdline-tools
-          curl -L https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o /tmp/cmdline.zip
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdline.zip
           unzip -q /tmp/cmdline.zip -d $ANDROID_HOME/cmdline-tools
           mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
@@ -35,26 +33,21 @@ jobs:
           echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
         shell: bash
 
-      - name: Accept Android SDK Licenses
-        run: yes | sdkmanager --licenses > /dev/null 2>&1 || true
+      - name: Accept SDK Licenses & Install packages
+        run: |
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
-      - name: Install Android SDK components
-        run: sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
-
-      - name: Grant Gradle execute permission
+      - name: Grant Gradle permission
         run: chmod +x gradlew
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: List APK output
-        if: always()
-        run: ls -la app/build/outputs/apk/debug/ || echo "No APK directory found"
-
-      - name: Upload APK
+      - name: Upload APK via GitHub API
         if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: NaviMusic-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 30
+        run: |
+          gh release create autobuild --title "Auto Build APK" --notes "Latest build" --latest || true
+          gh release upload autobuild app/build/outputs/apk/debug/app-debug.apk --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,40 @@
+image: ubuntu:22.04
+
+stages:
+  - build
+
+variables:
+  ANDROID_HOME: "/tmp/android-sdk"
+  ANDROID_SDK_ROOT: "/tmp/android-sdk"
+
+build_apk:
+  stage: build
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq git wget unzip curl openjdk-17-jdk zip
+    - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+    - export PATH=$JAVA_HOME/bin:$PATH
+    # 安装 Android SDK 命令行工具
+    - mkdir -p $ANDROID_HOME/cmdline-tools
+    - wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdline.zip
+    - unzip -q /tmp/cmdline.zip -d $ANDROID_HOME/cmdline-tools
+    - mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+    - export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+    - yes | sdkmanager --licenses > /dev/null 2>&1 || true
+    - sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+    - chmod +x gradlew
+
+  script:
+    - ./gradlew assembleDebug --no-daemon --stacktrace
+
+  artifacts:
+    name: "NaviMusic-debug"
+    paths:
+      - app/build/outputs/apk/debug/app-debug.apk
+    expire_in: 30 days
+    when: on_success
+
+  cache:
+    paths:
+      - .gradle/
+      - app/build/
