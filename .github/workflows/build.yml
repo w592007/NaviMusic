@@ -25,8 +25,6 @@ jobs:
         run: |
           export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
           export PATH=$JAVA_HOME/bin:$PATH
-          echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
-          echo "PATH=$PATH" >> $GITHUB_ENV
           java -version
 
       - name: Setup Android SDK
@@ -35,13 +33,31 @@ jobs:
           export PATH=$JAVA_HOME/bin:$PATH
           ANDROID_HOME=$HOME/android-sdk
           mkdir -p $ANDROID_HOME/cmdline-tools
+
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdline.zip
-          unzip -q /tmp/cmdline.zip -d $ANDROID_HOME/cmdline-tools
-          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+          unzip -q -o /tmp/cmdline.zip -d $ANDROID_HOME/cmdline-tools
+
+          # 找到实际的 bin 目录（cmdline-tools 版本号可能不同）
+          SDK_BIN=$(find $ANDROID_HOME/cmdline-tools -name "sdkmanager" -type f 2>/dev/null | head -1 | xargs dirname)
+          echo "Found sdkmanager at: $SDK_BIN"
+
+          # 重命名为 latest
+          rm -rf $ANDROID_HOME/cmdline-tools/latest
+          mv $SDK_BIN $ANDROID_HOME/cmdline-tools/latest
+
           chmod +x $ANDROID_HOME/cmdline-tools/latest/bin/*
+          ls $ANDROID_HOME/cmdline-tools/latest/bin/
+
+          # 设置环境变量
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
           echo "$ANDROID_HOME/cmdline-tools/latest/bin:$JAVA_HOME/bin" >> $GITHUB_PATH
+
+      - name: Accept SDK Licenses & Install packages
+        run: |
+          export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+          export PATH=$JAVA_HOME/bin:$HOME/android-sdk/cmdline-tools/latest/bin:$PATH
+          which sdkmanager
           yes | sdkmanager --licenses > /dev/null 2>&1 || true
           sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
@@ -51,8 +67,6 @@ jobs:
           export ANDROID_HOME=$HOME/android-sdk
           export PATH=$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
           java -version
-          which java
-          which sdkmanager
           bash gradlew assembleDebug --no-daemon
 
       - name: Upload APK via curl
