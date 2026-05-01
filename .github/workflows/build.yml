@@ -44,9 +44,26 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon
 
-      - name: Upload APK (v3 action)
-        uses: actions/upload-artifact@v3
-        with:
-          name: NaviMusic-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 30
+      - name: Upload APK via GitHub API
+        if: success()
+        run: |
+          APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+          if [ ! -f "$APK_PATH" ]; then echo "APK not found!"; exit 1; fi
+
+          GITHUB_API="https://uploads.github.com/repos/w592007/NaviMusic/releases"
+          RELEASE_RESPONSE=$(curl -s -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"tag_name":"latest","name":"NaviMusic Latest Build","draft":true}' \
+            "$GITHUB_API/releases")
+
+          RELEASE_ID=$(echo "$RELEASE_RESPONSE" | grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')
+          echo "Release ID: $RELEASE_ID"
+
+          curl -s -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/octet-stream" \
+            --data-binary "@$APK_PATH" \
+            "$GITHUB_API/releases/$RELEASE_ID/assets?name=NaviMusic-debug.apk"
+
+          echo "Upload complete!"
